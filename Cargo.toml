@@ -1,0 +1,30 @@
+[package]
+name = "jwwview"
+version = "1.0.0"
+edition = "2021"
+license = "MIT"
+description = "Jw_cad の図面（.jww）を Mac・Windows・ブラウザで開いて、描いて、保存"
+repository = "https://github.com/zhouqingni/jww-web"
+
+[dependencies]
+encoding_rs = "0.8"
+ttf-parser = "0.25"
+lyon_tessellation = "1.0"
+miniz_oxide = "0.8"
+eframe = "0.31"
+rfd = "0.15"
+
+# macOS：接收访达「打开」的文件（版本和 winit 用的一致）
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.5.2"
+objc2-foundation = { version = "0.2.2", features = ["NSArray", "NSString", "NSURL", "NSThread"] }
+
+# 网页版（wasm）
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlCanvasElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "Url", "EventTarget", "Event", "BeforeUnloadEvent", "console"] }
+
+[profile.dev]
+opt-level = 1

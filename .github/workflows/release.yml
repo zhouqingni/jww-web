@@ -1,0 +1,100 @@
+# Mac / Windows / Web 版を作って GitHub Releases に載せる。
+#   ・v* のタグを push する（git tag v1.0.0 && git push origin v1.0.0）
+#   ・または Actions →「release」→「Run workflow」でバージョン（v1.0.0 など）を入力（タグも自動で作る）
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "バージョン（例 v1.0.0）"
+        required: true
+
+jobs:
+  mac:
+    runs-on: macos-15
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "10.13"
+      CARGO_TARGET_DIR: target
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          rustup update stable
+          rustup target add x86_64-apple-darwin aarch64-apple-darwin
+      - run: cargo test --release
+      - run: |
+          cargo build --release --bin jwwview --target x86_64-apple-darwin
+          cargo build --release --bin jwwview --target aarch64-apple-darwin
+      - run: ./packaging/bundle-mac.sh
+      - uses: actions/upload-artifact@v4
+        with: { name: mac, path: JWW-Viewer-mac.zip }
+
+  windows:
+    runs-on: windows-latest
+    env:
+      CARGO_TARGET_DIR: target
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup update stable
+      - run: cargo build --release --bin jwwview
+      - shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force pkg | Out-Null
+          Copy-Item target/release/jwwview.exe "pkg/JWW Viewer.exe"
+          Copy-Item LICENSE pkg/LICENSE.txt
+          Compress-Archive -Path pkg/* -DestinationPath JWW-Viewer-windows.zip
+      - uses: actions/upload-artifact@v4
+        with: { name: windows, path: JWW-Viewer-windows.zip }
+
+  web:
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TARGET_DIR: target
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          rustup update stable
+          rustup target add wasm32-unknown-unknown
+          V=$(grep -A1 '^name = "wasm-bindgen"$' Cargo.lock | sed -n 's/version = "\(.*\)"/\1/p')
+          cargo install wasm-bindgen-cli --version "$V" --locked
+      - run: ./web/build.sh
+      - run: cp target/web/jww-web.html JWW-Viewer-web.html
+      - uses: actions/upload-artifact@v4
+        with: { name: web, path: JWW-Viewer-web.html }
+
+  release:
+    needs: [mac, windows, web]
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    env:
+      VERSION: ${{ inputs.version || github.ref_name }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: dist, merge-multiple: true }
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<'NOTES'
+          ## ダウンロード
+
+          | | |
+          |---|---|
+          | 🍎 Mac（Intel / Apple シリコン、macOS 10.13〜） | `JWW-Viewer-mac.zip` を展開して「アプリケーション」へ。初回は **右クリック →「開く」** |
+          | 🪟 Windows | `JWW-Viewer-windows.zip` を展開して `JWW Viewer.exe` |
+          | 🌐 Web（インストール不要） | https://zhouqingni.github.io/jww-web/ 、または `JWW-Viewer-web.html` をダブルクリック |
+
+          詳しくは [README](https://github.com/zhouqingni/jww-web#readme) をご覧ください。
+          NOTES
+          sed -i 's/^          //' notes.md
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            # 既にあるリリースは中身と説明を差し替え
+            gh release upload "$VERSION" dist/* --clobber
+            gh release edit "$VERSION" --title "JWW Viewer $VERSION" --notes-file notes.md
+          else
+            gh release create "$VERSION" dist/* --target "$GITHUB_SHA" --title "JWW Viewer $VERSION" --notes-file notes.md
+          fi

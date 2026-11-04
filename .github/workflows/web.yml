@@ -1,0 +1,59 @@
+# 网页版：编译成一个独立的 HTML（jww-web.html），双击用浏览器打开就能用。
+# 在该次运行页面最下面的 Artifacts 里下载（JWW-Web）。
+name: web
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TARGET_DIR: target
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust
+        run: |
+          rustup update stable
+          rustup target add wasm32-unknown-unknown
+          V=$(grep -A1 '^name = "wasm-bindgen"$' Cargo.lock | sed -n 's/version = "\(.*\)"/\1/p')
+          cargo install wasm-bindgen-cli --version "$V" --locked
+
+      - name: Build
+        run: ./web/build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JWW-Web
+          path: |
+            target/web/jww-web.html
+            web/LICENSE-IPAfont.txt
+
+  # main に push したら、ビルドした Web 版をリポジトリ直下の index.html に入れる
+  # （GitHub Pages：https://zhouqingni.github.io/jww-web/）
+  pages:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: JWW-Web
+          path: out
+      - name: Update index.html
+        run: |
+          cp out/target/web/jww-web.html index.html
+          cp web/og.png og.png
+          cp web/LICENSE-IPAfont.txt LICENSE-IPAfont.txt
+          touch .nojekyll
+          git add index.html og.png LICENSE-IPAfont.txt .nojekyll
+          if git diff --cached --quiet; then echo "変更なし"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Web 版を更新（${GITHUB_SHA::7}）"
+          git push

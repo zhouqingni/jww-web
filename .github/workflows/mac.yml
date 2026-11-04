@@ -1,0 +1,40 @@
+# 在 GitHub 的云端 Mac 上编译 JWW Viewer.app（Intel + M 芯片通用版）
+# 推送到 GitHub 后自动运行；也可以在 Actions 页面手动点 "Run workflow"。
+# 编好的 .app 在该次运行页面最下面的 Artifacts 里下载（JWW-Viewer-mac.zip）。
+name: mac
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    env:
+      # 支持到旧的 Intel Mac（macOS 10.13 以后）
+      MACOSX_DEPLOYMENT_TARGET: "10.13"
+      # .cargo/config.toml 里的 target-dir 是 Windows 开发机专用，云端用项目里的 target/
+      CARGO_TARGET_DIR: target
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust
+        run: |
+          rustup update stable
+          rustup target add x86_64-apple-darwin aarch64-apple-darwin
+
+      - name: Test
+        run: cargo test --release
+
+      - name: Build
+        run: |
+          cargo build --release --bin jwwview --target x86_64-apple-darwin
+          cargo build --release --bin jwwview --target aarch64-apple-darwin
+
+      - name: Bundle .app
+        run: ./packaging/bundle-mac.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JWW-Viewer-mac
+          path: JWW-Viewer-mac.zip

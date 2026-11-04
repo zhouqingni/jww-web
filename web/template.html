@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JWW Viewer — Jw_cad の図面をブラウザで</title>
+<meta name="description" content="Jw_cad の図面（.jww）をブラウザで開いて、見て、描いて、保存。インストール不要。図面はどこにも送信しません。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="JWW Viewer — Jw_cad の図面をブラウザで">
+<meta property="og:description" content="Mac でもブラウザでも .jww を開いて、描いて、保存。インストール不要・無料・オープンソース。">
+<meta property="og:url" content="https://zhouqingni.github.io/jww-web/">
+<meta property="og:image" content="https://zhouqingni.github.io/jww-web/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231e3a5f'/%3E%3Cpath d='M14 46h36M14 46V18M14 18l36 28' stroke='%2300d0d0' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='46' r='5' fill='%23ffd23f'/%3E%3C/svg%3E">
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #16202b; }
+  canvas#jww { position: absolute; inset: 0; width: 100%; height: 100%; outline: none; }
+  #loading { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 18px;
+             align-items: center; justify-content: center; text-align: center; padding: 0 16px;
+             color: #c9d6e3; font: 15px/1.6 -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+             background: radial-gradient(ellipse at center, #1e3a5f 0%, #16202b 70%); }
+  #loading h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: .04em; color: #fff; }
+  #loading h1 span { color: #00d0d0; }
+  #loading p { margin: 0; }
+  #loading .sub { color: #8fa3b8; font-size: 13px; }
+  #loading .bar { width: 220px; height: 4px; border-radius: 2px; background: #2b3e52; overflow: hidden; }
+  #loading .bar::after { content: ""; display: block; width: 40%; height: 100%; background: #00d0d0;
+                         animation: slide 1.2s ease-in-out infinite; }
+  @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+  #loading a { color: #7fd8ff; }
+</style>
+</head>
+<body>
+<canvas id="jww"></canvas>
+<div id="loading">
+  <h1>JWW <span>Viewer</span></h1>
+  <p>Jw_cad の図面をブラウザで開いて、描いて、保存</p>
+  <div class="bar"></div>
+  <p class="sub">読み込み中…（初回は数秒かかります）<br>図面はどこにも送信されません。すべてお使いのブラウザの中で処理します。</p>
+  <p class="sub"><a href="https://github.com/zhouqingni/jww-web" target="_blank" rel="noopener">GitHub</a> ・ MIT License ・ 文字：IPA ゴシック（IPA フォントライセンス v1.0）</p>
+</div>
+<script type="module">
+/*APP*/
+</script>
+</body>
+</html>

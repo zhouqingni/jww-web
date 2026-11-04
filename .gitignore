@@ -1,0 +1,9 @@
+/target
+*.pdf
+*.png
+/dist
+/C:
+!docs/images/*.png
+!packaging/icon.png
+!web/og.png
+!og.png
