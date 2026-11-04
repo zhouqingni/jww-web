@@ -89,6 +89,8 @@ jobs:
           | 🌐 Web（インストール不要） | https://zhouqingni.github.io/jww-web/ 、または `JWW-Viewer-web.html` をダブルクリック |
 
           詳しくは [README](https://github.com/zhouqingni/jww-web#readme) をご覧ください。
+
+          本ソフトは [Jw_cad](https://www.jwcad.net/)（清水治郎氏・田中善文氏）の操作と図面形式を再現した非公式の互換ソフトです。Jw_cad の作者様に心より感謝いたします。
           NOTES
           sed -i 's/^          //' notes.md
           if gh release view "$VERSION" >/dev/null 2>&1; then
